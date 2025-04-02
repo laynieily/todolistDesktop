@@ -174,6 +174,6 @@ delete_button.pack(pady=10)
 check_notifications()
 
 root.mainloop()
-conn.close()  # Close the database connection when done
+conn.close()  # Close the database connection when done (update)
 
 
