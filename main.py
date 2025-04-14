@@ -55,7 +55,7 @@ conn.commit()
 username = None
 role = None
 
-# ---------- The login/signup page (first page you see) ----------
+# ---------- The login (first page you see) ----------
 def login_signup():
     window = tk.Toplevel(root)
     window.title("Task Manager")
@@ -91,6 +91,7 @@ def login_signup():
         else:
             messagebox.showerror("Login Failed", "Invalid username or password.", parent=window)
 
+    #New Sign Up separate pop-up window
     def open_signup_window():
         signup_win = tk.Toplevel(window)
         signup_win.title("Sign Up")
@@ -213,12 +214,12 @@ def create_action():
     alarm_days_entry = tk.Entry(create_window, width=10)
     alarm_days_entry.pack(pady=5)
 
-    # Assignee dropdown
+    #Assignee dropdown
     tk.Label(create_window, text="Assign To (assignee):").pack()
     assigned_to_var = tk.StringVar(create_window)
     if assignees:
         assigned_to_var.set(assignees[0])
-    tk.OptionMenu(create_window, assigned_to_var, assigned_to_var.get(), *assignees).pack(pady=5)
+    tk.OptionMenu(create_window, assigned_to_var, *assignees).pack(pady=5)
 
 
     def save_task():
