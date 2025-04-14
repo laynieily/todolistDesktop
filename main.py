@@ -16,23 +16,38 @@ try:
 except sqlite3.OperationalError:
     pass
 
+try:
+    cursor.execute("ALTER TABLE users ADD COLUMN password TEXT")
+    conn.commit()
+except sqlite3.OperationalError:
+    pass
+
+
+
 cursor.execute("""
     CREATE TABLE IF NOT EXISTS tasks (
-        task_id INTEGER PRIMARY KEY AUTOINCREMENT,
-        title TEXT NOT NULL,
+        task_id     INTEGER,
+        title       TEXT NOT NULL,
         description TEXT,
-        due_date TEXT,
-        alarm_days INTEGER,
-        status TEXT DEFAULT 'Not started'
+        due_date    TEXT,
+        alarm_days  INTEGER,
+        status      TEXT DEFAULT 'Not started',
+        assigned_to TEXT,
+        PRIMARY KEY(task_id AUTOINCREMENT)
     )
 """)
 
+
 cursor.execute("""
     CREATE TABLE IF NOT EXISTS users (
-        username TEXT PRIMARY KEY,
-        role TEXT NOT NULL CHECK(role IN ('assigner', 'assignee'))
+        username    TEXT,
+        password    TEXT NOT NULL,
+        role        TEXT NOT NULL CHECK(role IN ('assigner', 'assignee')),
+        PRIMARY KEY(username)
     )
 """)
+
+
 
 conn.commit()
 
@@ -44,66 +59,98 @@ role = None
 def login_signup():
     window = tk.Toplevel(root)
     window.title("Task Manager")
-    window.geometry("350x350")
+    window.geometry("500x500")
     window.configure(bg="#C6EBF1")
     window.grab_set()
 
-    #Shows the starting window which is the login/signup for the user to acces the tasks
-    tk.Label(window, text="Login or Sign Up", font=("", 24), bg="#C6EBF1" ).pack(pady=20)
+    tk.Label(window, text="Login", font=("", 20), bg="#C6EBF1").pack(pady=20)
 
     tk.Label(window, text="Username:", bg="#C6EBF1").pack(pady=5)
     user_entry = tk.Entry(window)
     user_entry.pack(pady=5)
 
-    tk.Label(window, text="Role (assigner/assignee):", bg="#C6EBF1").pack(pady=5)
-    role_entry = tk.Entry(window)
-    role_entry.pack(pady=5)
+    tk.Label(window, text="Password:", bg="#C6EBF1").pack(pady=5)
+    pass_entry = tk.Entry(window, show="*")
+    pass_entry.pack(pady=5)
 
-    #If user is not signed in, the signup stores their username in the database
-    def signup():
-        user = user_entry.get().strip().lower()
-        r = role_entry.get().strip().lower()
-        if not user or r not in ["assigner", "assignee"]:
-            messagebox.showerror("Invalid", "Enter a username and valid role.", parent=window)
-            return
-        try:
-            cursor.execute("INSERT INTO users (username, role) VALUES (?, ?)", (user, r))
-            conn.commit()
-            messagebox.showinfo("Success", "User registered. You can now log in.", parent=window)
-        except sqlite3.IntegrityError:
-            messagebox.showerror("Error", "Username already exists.", parent=window)
-
-    #If user is already signed up, looks for the username in the database and see if it matches 
-    #(When logging in the user doesn't need to also input their role, just username)
     def login():
         global username, role
         user = user_entry.get().strip().lower()
-        cursor.execute("SELECT role FROM users WHERE username = ?", (user,))
+        pwd = pass_entry.get()
+
+        cursor.execute("SELECT password, role FROM users WHERE username = ?", (user,))
         result = cursor.fetchone()
-        if result:
+
+        if result and result[0] == pwd:
             username = user
-            role = result[0]
+            role = result[1]
             messagebox.showinfo("Welcome", f"Logged in as {role}.", parent=window)
             window.destroy()
             root.deiconify()
             load_main_ui()
         else:
-            #Handles error if user is either not signed up or misspelled
-            messagebox.showerror("Login Failed", "User not found. Please sign up first.", parent=window)
+            messagebox.showerror("Login Failed", "Invalid username or password.", parent=window)
 
-    #For the user to make an 'account' and then login 
-    tk.Button(window, text="Login", command=login).pack(pady=10)
-    tk.Button(window, text="Sign Up", command=signup).pack(pady=10)
+    def open_signup_window():
+        signup_win = tk.Toplevel(window)
+        signup_win.title("Sign Up")
+        signup_win.geometry("450x450")
+        signup_win.configure(bg="#EAF9FF")
+        signup_win.grab_set()
 
-    #Had to make a seperate function for the login window to close since the program would still run even though the window was closed
+        tk.Label(signup_win, text="Sign Up", font=("", 18), bg="#EAF9FF").pack(pady=20)
+
+        tk.Label(signup_win, text="Username:", bg="#EAF9FF").pack(pady=5)
+        new_user_entry = tk.Entry(signup_win)
+        new_user_entry.pack(pady=5)
+
+        tk.Label(signup_win, text="Password:", bg="#EAF9FF").pack(pady=5)
+        new_pass_entry = tk.Entry(signup_win, show="*")
+        new_pass_entry.pack(pady=5)
+
+        tk.Label(signup_win, text="Confirm Password:", bg="#EAF9FF").pack(pady=5)
+        confirm_pass_entry = tk.Entry(signup_win, show="*")
+        confirm_pass_entry.pack(pady=5)
+
+        tk.Label(signup_win, text="Role:", bg="#EAF9FF").pack(pady=5)
+        role_var = tk.StringVar(value="assigner")  #default to assigner
+        role_menu = tk.OptionMenu(signup_win, role_var, "assigner", "assignee")
+
+        role_menu.pack(pady=5)
+
+
+        def signup():
+            new_user = new_user_entry.get().strip().lower()
+            new_pass = new_pass_entry.get()
+            confirm_pass = confirm_pass_entry.get()
+            selected_role = role_var.get()
+
+            if not new_user or not new_pass or not confirm_pass or not selected_role:
+                messagebox.showerror("Error", "All fields are required.", parent=signup_win)
+                return
+
+            if new_pass != confirm_pass:
+                messagebox.showerror("Error", "Passwords do not match.", parent=signup_win)
+                return
+
+            try:
+                cursor.execute("INSERT INTO users (username, password, role) VALUES (?, ?, ?)", (new_user, new_pass, selected_role))
+                conn.commit()
+                messagebox.showinfo("Success", "User registered. You can now log in.", parent=signup_win)
+                signup_win.destroy()
+            except sqlite3.IntegrityError:
+                messagebox.showerror("Error", "Username already exists.", parent=signup_win)
+
+        tk.Button(signup_win, text="Sign Up", command=signup, bg="green", fg="white").pack(pady=20)
+
+    tk.Button(window, text="Login", command=login, bg="blue", fg="white").pack(pady=10)
+    tk.Button(window, text="Sign Up", command=open_signup_window).pack(pady=5)
+
     def handle_close():
-        #If the login/signup window is manually closed (x), exit the program
         conn.close()
         root.destroy()
 
     window.protocol("WM_DELETE_WINDOW", handle_close)
-
-    #Makes the root (UI) window wait to pop up after the user logins
     root.wait_window(window)
 
 
@@ -135,7 +182,11 @@ def load_main_ui():
 def create_action():
     create_window = tk.Toplevel(root)
     create_window.title("Create Task")
-    create_window.geometry("350x350")
+    create_window.geometry("450x450")
+
+    cursor.execute("SELECT DISTINCT username FROM users WHERE role = 'assignee'")
+    assignees = [row[0] for row in cursor.fetchall()]
+
 
     #Shows the Task ID entry
     tk.Label(create_window, text="Task ID:").pack()
@@ -162,6 +213,14 @@ def create_action():
     alarm_days_entry = tk.Entry(create_window, width=10)
     alarm_days_entry.pack(pady=5)
 
+    # Assignee dropdown
+    tk.Label(create_window, text="Assign To (assignee):").pack()
+    assigned_to_var = tk.StringVar(create_window)
+    if assignees:
+        assigned_to_var.set(assignees[0])
+    tk.OptionMenu(create_window, assigned_to_var, assigned_to_var.get(), *assignees).pack(pady=5)
+
+
     def save_task():
         #Gets the user input for each option
         task_id = task_id_entry.get()
@@ -169,9 +228,10 @@ def create_action():
         description = description_entry.get()
         due_date = due_date_entry.get()
         alarm_days = alarm_days_entry.get()
+        assigned_to = assigned_to_var.get()
 
         #Handles error if no input was detected
-        if not title or not task_id or not due_date or not alarm_days:
+        if not title or not task_id or not due_date or not alarm_days or not assigned_to:
             messagebox.showerror("Error", "Please fill all required fields.", parent=create_window)
             return
         try:
@@ -182,11 +242,11 @@ def create_action():
             return
 
         cursor.execute("""
-            INSERT INTO tasks (task_id, title, description, due_date, alarm_days)
-            VALUES (?, ?, ?, ?, ?)
-        """, (task_id, title, description, due_date, alarm_days))
+            INSERT INTO tasks (task_id, title, description, due_date, alarm_days, assigned_to)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (task_id, title, description, due_date, alarm_days, assigned_to))
         conn.commit()
-        messagebox.showinfo("Success", "Task added!", parent=create_window)
+        messagebox.showinfo("Success", f"Task assigned to {assigned_to}!", parent=create_window)
         create_window.destroy()
 
     tk.Button(create_window, text="Create Task", command=save_task, bg="green", fg="white").pack(pady=10)
@@ -197,12 +257,21 @@ def read_action():
     read_window.title("My Tasks")
     read_window.geometry("450x500")
 
-    cursor.execute("SELECT task_id, title, description, due_date, alarm_days, status FROM tasks")
+    if role == "assignee":
+        cursor.execute("""
+            SELECT task_id, title, description, due_date, alarm_days, status FROM tasks WHERE assigned_to = ?
+        """, (username,))
+    else:
+        cursor.execute("""
+            SELECT task_id, title, description, due_date, alarm_days, status, assigned_to FROM tasks
+        """)
+        
     tasks = cursor.fetchall()
 
     if not tasks:
         tk.Label(read_window, text="No tasks found.").pack()
         return
+
 
     #Shows the user their tasks
     for task in tasks:
@@ -230,12 +299,13 @@ def read_action():
         else:
             #This just shows the current status without the option to change it for the assigner
             tk.Label(frame, text=f"⏳ Status: {task[5]}").pack(anchor="w")
+            tk.Label(frame, text=f"👤 Assigned To: {task[6]}").pack(anchor="w")
 
 # ---------- This function allows users(assigners) to update the task logic ----------
 def update_action():
     update_window = tk.Toplevel(root)
     update_window.title("Update Task")
-    update_window.geometry("350x350")
+    update_window.geometry("450x450")
 
     #Shows the Existing Task ID entry
     tk.Label(update_window, text="Existing Task ID:").pack()
@@ -336,7 +406,7 @@ def delete_action():
 # ---------- Starts the the window with the main UI ----------
 root = tk.Tk()
 root.title("To Do List (Desktop)")
-root.geometry("350x350")
+root.geometry("400x400")
 root.configure(bg="grey")
 root.withdraw()
 
