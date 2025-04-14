@@ -1,9 +1,9 @@
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import messagebox  # Uncommented this
 import sqlite3
 from datetime import datetime
 
-############## DATABASE ###################
+# Initialize the database
 conn = sqlite3.connect("tasks.db")
 cursor = conn.cursor()
 cursor.execute("""
@@ -18,180 +18,205 @@ cursor.execute("""
 """)
 conn.commit()
 
-############## Main App Window #################
+# Create the main window
 root = tk.Tk()
 root.title("To Do List (Desktop)")
-root.geometry("500x500")
-root.configure(bg="lightgray")
+root.geometry("300x200")
+root.configure(bg="grey")
 
-########### Frame container ############
-container = tk.Frame(root)
-container.pack(fill="both", expand=True)
 
-frames = {}
+# Define the button actions
+def create_action():
+    create_window = tk.Toplevel(root)
+    create_window.title("Create Task")
+    create_window.geometry("350x350")
 
-########### Navigation bar ##############
-nav_frame = tk.Frame(root, bg="blue")
-nav_frame.pack(fill="x")
+    #Create Task Id
+    tk.Label(create_window, text="Task Id:").pack()
+    task_id_entry = tk.Entry(create_window, width=40)
+    task_id_entry.pack(pady=5)
 
-def show_frame(name):
-    frame = frames.get(name)
-    if frame:
-        frame.tkraise()
+    # Task Title
+    tk.Label(create_window, text="Task Title:").pack()
+    title_entry = tk.Entry(create_window, width=40)
+    title_entry.pack(pady=5)
+    # Task Description
+    tk.Label(create_window, text="Task Description:").pack()
+    description_entry = tk.Entry(create_window, width=40)
+    description_entry.pack(pady=5)
+    # Due Date
+    tk.Label(create_window, text="Due Date (DD/MM/YYYY):").pack()
+    due_date_entry = tk.Entry(create_window, width=20)
+    due_date_entry.pack(pady=5)
+    # Alarm Days Before Due Date
+    tk.Label(create_window, text="Alarm:").pack()
+    alarm_days_entry = tk.Entry(create_window, width=10)
+    alarm_days_entry.pack(pady=5)
 
-######### Create Frame ################
-create_frame = tk.Frame(container, bg="white")
-frames["create"] = create_frame
-create_frame.place(relwidth=1, relheight=1)
+    # Saving Task
+    def save_task():
+        task_id = task_id_entry.get()
+        title = title_entry.get()
+        description = description_entry.get().strip()  # Fixed this
+        due_date = due_date_entry.get()
+        alarm_days = alarm_days_entry.get()
 
-tk.Label(create_frame, text="Create Task", font=("Arial", 14, "bold")).pack(pady=10)
 
-entries = {}
-
-for label in ["Task Id", "Title", "Description", "Due Date (DD/MM/YYYY)", "Alarm Days"]:
-    tk.Label(create_frame, text=label).pack()
-    entry = tk.Entry(create_frame, width=40)
-    entry.pack(pady=3)
-    entries[label] = entry
-
-def save_task():
-    task_id = entries["Task Id"].get().strip()
-    title = entries["Title"].get().strip()
-    description = entries["Description"].get().strip()
-    due_date = entries["Due Date (DD/MM/YYYY)"].get().strip()
-    alarm_days = entries["Alarm Days"].get().strip()
-
-    if not task_id or not title or not due_date or not alarm_days:
-        messagebox.showerror("Error", "All fields are required!")
-        return
-
-    try:
-        datetime.strptime(due_date, "%m/%d/%Y")
-        alarm_days = int(alarm_days)
-    except ValueError:
-        messagebox.showerror("Error", "Invalid date or alarm format.")
-        return
-
-    try:
-        cursor.execute("INSERT INTO tasks (task_id, title, description, due_date, alarm_days) VALUES (?, ?, ?, ?, ?)",
-                       (task_id, title, description, due_date, alarm_days))
+        if not task_id or not title or not due_date or not alarm_days:
+            messagebox.showerror("Error", "Task Id, Title, Due Date, and Alarm are required!", parent=create_window)
+            return
+        try:
+            datetime.strptime(due_date, "%d/%m/%Y")  # Fixed the format
+            alarm_days = int(alarm_days)  # Check if alarm is a number
+        except ValueError:
+            messagebox.showerror("Error", "Invalid Date or Alarm!", parent=create_window)
+            return
+        
+        cursor.execute("INSERT INTO tasks (task_id, title, description, due_date, alarm_days) VALUES (?, ?, ?, ?, ?)", 
+                       (task_id, title, description, due_date, alarm_days))  # Fixed table name
         conn.commit()
-        messagebox.showinfo("Success", "Task added successfully!")
-        for entry in entries.values():
-            entry.delete(0, tk.END)
-    except sqlite3.IntegrityError:
-        messagebox.showerror("Error", "Task ID already exists.")
 
-tk.Button(create_frame, text="Save Task", command=save_task, bg="green", fg="white").pack(pady=10)
+        messagebox.showinfo("Success", "Task added successfully!", parent=create_window)
+        create_window.destroy()  # Close the window after saving
 
-##### Read Frame ########
-read_frame = tk.Frame(container, bg="white")
-frames["read"] = read_frame
-read_frame.place(relwidth=1, relheight=1)
+    submit_button = tk.Button(create_window, text="Save Task", command=save_task, width=20, bg="green", fg="white")
+    submit_button.pack(pady=10)
 
-read_header = tk.Label(read_frame, text="Your Tasks", font=("Arial", 14, "bold"))
-read_header.pack(pady=10)
+def read_action():
+    read_window = tk.Toplevel(root)
+    read_window.title("My Tasks")
+    read_window.geometry("400x400")
 
-task_display_frame = tk.Frame(read_frame, bg="white")
-task_display_frame.pack(fill="both", expand=True)
-
-def load_tasks():
-    for widget in task_display_frame.winfo_children():
-        widget.destroy()
+    tk.Label(read_window, text="Your Tasks", font=("Arial", 12, "bold")).pack(pady=5)
 
     cursor.execute("SELECT task_id, title, description, due_date, alarm_days FROM tasks")
     tasks = cursor.fetchall()
 
     if not tasks:
-        tk.Label(task_display_frame, text="No tasks found.", font=("Arial", 10), bg="white").pack(pady=10)
+        tk.Label(read_window, text="No tasks found.", font=("Arial", 10)).pack(pady=10)
     else:
         for task in tasks:
-            text = f"📌 {task[0]} - {task[1]}\n📝 {task[2]}\n📅 Due: {task[3]} | 🔔 {task[4]} days before"
-            tk.Label(task_display_frame, text=text, justify="left", anchor="w",
-                     font=("Arial", 10), bg="white", relief="groove", padx=10, pady=5).pack(fill="x", pady=4, padx=10)
+            task_text = f"📌 {task[0]}\n📌 {task[1]}\n📝 {task[2]}\n📅 Due: {task[3]}\n🔔 Notify: {task[4]} days before\n"
+            tk.Label(read_window, text=task_text, font=("Arial", 10), justify="left", padx=10, pady=5, relief="ridge").pack(fill="both", padx=10, pady=2)
 
-def show_read():
-    load_tasks()
-    show_frame("read")
+def update_action():
+    update_window = tk.Toplevel(root)
+    update_window.title("Update Task")
+    update_window.geometry("350x400")
 
-######## Update Frame ###########
-update_frame = tk.Frame(container, bg="white")
-frames["update"] = update_frame
-update_frame.place(relwidth=1, relheight=1)
+    # Step 1: Enter existing task ID
+    tk.Label(update_window, text="*Existing Task ID:").pack()
+    old_task_id_entry = tk.Entry(update_window, width=40)
+    old_task_id_entry.pack(pady=5)
 
-tk.Label(update_frame, text="Update Task", font=("Arial", 14, "bold")).pack(pady=10)
+    # Step 2: Enter new details (including new task ID)
+    tk.Label(update_window, text="*New Task ID:").pack()
+    new_task_id_entry = tk.Entry(update_window, width=40)
+    new_task_id_entry.pack(pady=5)
 
-update_entries = {}
-for label in ["Old Task ID", "New Task ID", "Title", "Description", "Due Date (DD/MM/YYYY)", "Alarm Days"]:
-    tk.Label(update_frame, text=label).pack()
-    entry = tk.Entry(update_frame, width=40)
-    entry.pack(pady=3)
-    update_entries[label] = entry
+    tk.Label(update_window, text="*New Task Title:").pack()
+    title_entry = tk.Entry(update_window, width=40)
+    title_entry.pack(pady=5)
 
-def update_task():
-    try:
-        old_id = int(update_entries["Old Task ID"].get().strip())
-        new_id = int(update_entries["New Task ID"].get().strip())
-        title = update_entries["Title"].get().strip()
-        description = update_entries["Description"].get().strip()
-        due_date = update_entries["Due Date (DD/MM/YYYY)"].get().strip()
-        alarm_days = int(update_entries["Alarm Days"].get().strip())
-        datetime.strptime(due_date, "%m/%d/%Y")
-    except ValueError:
-        messagebox.showerror("Error", "Please enter valid data.")
-        return
+    tk.Label(update_window, text="New Task Description:").pack()
+    description_entry = tk.Text(update_window, width=40, height=5)
+    description_entry.pack(pady=5)
 
-    try:
-        cursor.execute("""
-            UPDATE tasks 
-            SET task_id=?, title=?, description=?, due_date=?, alarm_days=?
-            WHERE task_id=?
-        """, (new_id, title, description, due_date, alarm_days, old_id))
+    tk.Label(update_window, text="*New Due Date (DD/MM/YYYY):").pack()
+    due_date_entry = tk.Entry(update_window, width=20)
+    due_date_entry.pack(pady=5)
+
+    tk.Label(update_window, text="*New Alarm (days before due date):").pack()
+    alarm_days_entry = tk.Entry(update_window, width=10)
+    alarm_days_entry.pack(pady=5)
+
+    def save_updates():
+        old_task_id = old_task_id_entry.get().strip()
+        new_task_id = new_task_id_entry.get().strip()
+        title = title_entry.get().strip()
+        description = description_entry.get("1.0", tk.END).strip()
+        due_date = due_date_entry.get().strip()
+        alarm_days = alarm_days_entry.get().strip()
+
+        # Check required fields
+        if not old_task_id or not new_task_id or not title or not due_date or not alarm_days:
+            messagebox.showerror("Error", "All fields with * are required!", parent=update_window)
+            return
+
+        try:
+            datetime.strptime(due_date, "%d/%m/%Y")
+            alarm_days = int(alarm_days)
+            old_task_id = int(old_task_id)
+            new_task_id = int(new_task_id)
+        except ValueError:
+            messagebox.showerror("Error", "Invalid input. Make sure IDs, date, and alarm are correct.", parent=update_window)
+            return
+
+        # Try to update
+        try:
+            cursor.execute("""
+                UPDATE tasks 
+                SET task_id = ?, title = ?, description = ?, due_date = ?, alarm_days = ?
+                WHERE task_id = ?
+            """, (new_task_id, title, description, due_date, alarm_days, old_task_id))
+            conn.commit()
+
+            if cursor.rowcount == 0:
+                messagebox.showerror("Error", f"No task found with ID {old_task_id}.", parent=update_window)
+            else:
+                messagebox.showinfo("Success", "Task updated successfully!", parent=update_window)
+                update_window.destroy()
+        except sqlite3.IntegrityError:
+            messagebox.showerror("Error", f"Task ID {new_task_id} already exists. Choose a different one.", parent=update_window)
+
+    update_button = tk.Button(update_window, text="Update Task", command=save_updates, width=20, bg="blue", fg="white")
+    update_button.pack(pady=10)
+
+
+def delete_action():
+    delete_window = tk.Toplevel(root)
+    delete_window.title("Delete Task")
+    delete_window.geometry("300x150")
+
+    # Task ID Entry
+    tk.Label(delete_window, text="Enter Task ID to Delete:").pack(pady=5)
+    task_id_entry = tk.Entry(delete_window, width=20)
+    task_id_entry.pack(pady=5)
+
+    def confirm_delete():
+        task_id = task_id_entry.get()
+        if not task_id.isdigit():
+            messagebox.showerror("Error", "Please enter a valid Task ID!", parent=delete_window)
+            return
+        
+        cursor.execute("DELETE FROM tasks WHERE task_id = ?", (task_id,))
         conn.commit()
-        if cursor.rowcount == 0:
-            messagebox.showerror("Error", "Task not found.")
+
+        if cursor.rowcount > 0:
+            messagebox.showinfo("Success", f"Task with ID {task_id} deleted successfully!", parent=delete_window)
         else:
-            messagebox.showinfo("Success", "Task updated successfully!")
-            for entry in update_entries.values():
-                entry.delete(0, tk.END)
-    except sqlite3.IntegrityError:
-        messagebox.showerror("Error", "New Task ID already exists.")
+            messagebox.showerror("Error", f"No task found with ID {task_id}.", parent=delete_window)
 
-tk.Button(update_frame, text="Update Task", command=update_task, bg="blue", fg="white").pack(pady=10)
+        delete_window.destroy()
 
-########## Delete Frame ##########
-delete_frame = tk.Frame(container, bg="white")
-frames["delete"] = delete_frame
-delete_frame.place(relwidth=1, relheight=1)
+    delete_button = tk.Button(delete_window, text="Delete Task", command=confirm_delete, width=20, bg="red", fg="white")
+    delete_button.pack(pady=10)
 
-tk.Label(delete_frame, text="Delete Task", font=("Arial", 14, "bold")).pack(pady=10)
-tk.Label(delete_frame, text="Task ID to Delete").pack()
-delete_entry = tk.Entry(delete_frame, width=20)
-delete_entry.pack(pady=5)
+# Add the buttons to the window
+create_button = tk.Button(root, text="Create Task", command=create_action, width=20, bg="green", fg="white")
+create_button.pack(pady=10)
 
-def delete_task():
-    task_id = delete_entry.get().strip()
-    if not task_id.isdigit():
-        messagebox.showerror("Error", "Please enter a valid Task ID.")
-        return
+read_button = tk.Button(root, text="Read", command=read_action, width=20, bg="orange", fg="white")
+read_button.pack(pady=10)
 
-    cursor.execute("DELETE FROM tasks WHERE task_id = ?", (task_id,))
-    conn.commit()
-    if cursor.rowcount > 0:
-        messagebox.showinfo("Success", f"Task {task_id} deleted.")
-        delete_entry.delete(0, tk.END)
-    else:
-        messagebox.showerror("Error", "Task not found.")
+update_button = tk.Button(root, text="Update", command=update_action, width=20, bg="blue", fg="white")
+update_button.pack(pady=10)
 
-tk.Button(delete_frame, text="Delete Task", command=delete_task, bg="red", fg="white").pack(pady=10)
+delete_button = tk.Button(root, text="Delete", command=delete_action, width=20, bg="red", fg="white")
+delete_button.pack(pady=10)
 
-############# Navigation Buttons ################
-tk.Button(nav_frame, text="Create", width=15, command=lambda: show_frame("create")).pack(side="left", padx=5, pady=5)
-tk.Button(nav_frame, text="Read", width=15, command=show_read).pack(side="left", padx=5, pady=5)
-tk.Button(nav_frame, text="Update", width=15, command=lambda: show_frame("update")).pack(side="left", padx=5, pady=5)
-tk.Button(nav_frame, text="Delete", width=15, command=lambda: show_frame("delete")).pack(side="left", padx=5, pady=5)
-
-############# Start with Create Frame ##########
-show_frame("create")
+# Run the application
 root.mainloop()
+
+# Close database connection when done
 conn.close()
