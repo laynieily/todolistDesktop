@@ -79,37 +79,43 @@ def login():
     else:
         messagebox.showerror("Error", "Invalid credentials")
 
-
-    def signup():
-        username = username_entry.get()
-        password = password_entry.get()
-        role = role_entry.get().lower()
-        if role not in ['assigner', 'assignee']:
-            messagebox.showerror("Error", "Role must be 'assigner' or 'assignee'")
-            return
-        try:
-            cursor.execute("INSERT INTO users (username, password, role) VALUES (?, ?, ?)",
-                           (username, password, role))
-            conn.commit()
-            messagebox.showinfo("Success", "User registered!")
-        except sqlite3.IntegrityError:
-            messagebox.showerror("Error", "Username already exists!")
-
-    def login():
-        username = username_entry.get()
-        password = password_entry.get()
-        cursor.execute("SELECT * FROM users WHERE username=? AND password=?", (username, password))
-        if cursor.fetchone():
-            messagebox.showinfo("Success", f"Welcome {username}!")
-            login_window.destroy()
-            root.deiconify()
-        else:
-            messagebox.showerror("Error", "Invalid credentials")
+def signup():
+    username = username_entry.get()
+    password = password_entry.get()
+    role = role_entry.get().lower()
+    if role not in ['assigner', 'assignee']:
+        messagebox.showerror("Error", "Role must be 'assigner' or 'assignee'")
+        return
+    try:
+        cursor.execute("INSERT INTO users (username, password, role) VALUES (?, ?, ?)",
+                       (username, password, role))
+        conn.commit()
+        messagebox.showinfo("Success", "User registered!")
+    except sqlite3.IntegrityError:
+        messagebox.showerror("Error", "Username already exists!")
 
 
+def login_signup():
+    global login_window, username_entry, password_entry, role_entry
+    login_window = tk.Toplevel()
+    login_window.title("Login / Sign Up")
+    login_window.geometry("300x250")
+
+    tk.Label(login_window, text="Username").pack()
+    username_entry = tk.Entry(login_window)
+    username_entry.pack()
+
+    tk.Label(login_window, text="Password").pack()
+    password_entry = tk.Entry(login_window, show="*")
+    password_entry.pack()
+
+    tk.Label(login_window, text="Role (assigner/assignee)").pack()
+    role_entry = tk.Entry(login_window)
+    role_entry.pack()
 
     tk.Button(login_window, text="Login", command=login).pack(pady=5)
-    tk.Button(login_window, text="Sign Up", command=signup).pack()
+    tk.Button(login_window, text="Sign Up", command=signup).pack()      
+
 
 # ----- Logout --------
 def logout():
