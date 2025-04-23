@@ -14,7 +14,6 @@ cursor.execute("""
         role TEXT NOT NULL
     )
 """)
-
 cursor.execute("""
     CREATE TABLE IF NOT EXISTS tasks (
         task_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -26,15 +25,14 @@ cursor.execute("""
         assigned_to TEXT
     )
 """)
-
 conn.commit()
 
 # Tkinter windows
 root = tk.Tk()
 root.title("To Do List App")
 root.geometry("600x500")
+root.configure(bg="#f2f2f2")
 
-# Frames
 frames = {}
 
 def show_frame(name):
@@ -47,22 +45,23 @@ def login_signup():
     global login_window, username_entry, password_entry, role_entry
     login_window = tk.Toplevel()
     login_window.title("Login / Sign Up")
-    login_window.geometry("300x250")
+    login_window.geometry("300x280")
+    login_window.configure(bg="#f9f9f9")
 
-    tk.Label(login_window, text="Username").pack()
-    username_entry = tk.Entry(login_window)
+    tk.Label(login_window, text="Username").pack(pady=(10, 0))
+    username_entry = tk.Entry(login_window, width=30)
     username_entry.pack()
 
-    tk.Label(login_window, text="Password").pack()
-    password_entry = tk.Entry(login_window, show="*")
+    tk.Label(login_window, text="Password").pack(pady=(10, 0))
+    password_entry = tk.Entry(login_window, show="*", width=30)
     password_entry.pack()
 
-    tk.Label(login_window, text="Role (assigner/assignee)").pack()
-    role_entry = tk.Entry(login_window)
+    tk.Label(login_window, text="Role (assigner/assignee)").pack(pady=(10, 0))
+    role_entry = tk.Entry(login_window, width=30)
     role_entry.pack()
 
-    tk.Button(login_window, text="Login", command=login).pack(pady=5)
-    tk.Button(login_window, text="Sign Up", command=login_signup).pack()
+    tk.Button(login_window, text="Login", command=login, bg="#4CAF50", fg="white").pack(pady=10)
+    tk.Button(login_window, text="Sign Up", command=signup).pack()
 
 def login():
     global current_user, current_role
@@ -76,6 +75,8 @@ def login():
         messagebox.showinfo("Success", f"Welcome {current_user}!")
         login_window.destroy()
         root.deiconify()
+        render_menu()
+        show_read()
     else:
         messagebox.showerror("Error", "Invalid credentials")
 
@@ -94,62 +95,28 @@ def signup():
     except sqlite3.IntegrityError:
         messagebox.showerror("Error", "Username already exists!")
 
-
-def login_signup():
-    global login_window, username_entry, password_entry, role_entry
-    login_window = tk.Toplevel()
-    login_window.title("Login / Sign Up")
-    login_window.geometry("300x250")
-
-    tk.Label(login_window, text="Username").pack()
-    username_entry = tk.Entry(login_window)
-    username_entry.pack()
-
-    tk.Label(login_window, text="Password").pack()
-    password_entry = tk.Entry(login_window, show="*")
-    password_entry.pack()
-
-    tk.Label(login_window, text="Role (assigner/assignee)").pack()
-    role_entry = tk.Entry(login_window)
-    role_entry.pack()
-
-    tk.Button(login_window, text="Login", command=login).pack(pady=5)
-    tk.Button(login_window, text="Sign Up", command=signup).pack()      
-
-
 # ----- Logout --------
 def logout():
     root.withdraw()
     login_signup()
 
-
 # ---------- CREATE TASK ----------
-create_frame = tk.Frame(root)
+create_frame = tk.Frame(root, bg="#f2f2f2")
 frames["create"] = create_frame
 
-tk.Label(create_frame, text="Create Task", font=("Helvetica", 16)).pack(pady=10)
-title_entry = tk.Entry(create_frame)
-description_entry = tk.Entry(create_frame)
-due_date_entry = tk.Entry(create_frame)
-alarm_days_entry = tk.Entry(create_frame)
-assigned_to_entry = tk.Entry(create_frame)
+tk.Label(create_frame, text="Create Task", font=("Helvetica", 16), bg="#f2f2f2").pack(pady=10)
 
-tk.Label(create_frame, text="Task Id:").pack()
-cursor.execute("SELECT DISTINCT username FROM users WHERE role = 'assignee'")
-assignees = [row[0] for row in cursor.fetchall()]
-task_id_entry = tk.Entry(create_frame)
-task_id_entry.pack(pady=5)
+def add_labeled_entry(parent, label_text):
+    tk.Label(parent, text=label_text, bg="#f2f2f2").pack(anchor="w", padx=10)
+    entry = tk.Entry(parent, width=50)
+    entry.pack(pady=2)
+    return entry
 
-tk.Label(create_frame, text="Title").pack()
-title_entry.pack()
-tk.Label(create_frame, text="Description").pack()
-description_entry.pack()
-tk.Label(create_frame, text="Due Date (MM/DD/YYYY)").pack()
-due_date_entry.pack()
-tk.Label(create_frame, text="Alarm Days Before Due").pack()
-alarm_days_entry.pack()
-tk.Label(create_frame, text="Assign To (username)").pack()
-assigned_to_entry.pack()
+title_entry = add_labeled_entry(create_frame, "Title")
+description_entry = add_labeled_entry(create_frame, "Description")
+due_date_entry = add_labeled_entry(create_frame, "Due Date (MM/DD/YYYY)")
+alarm_days_entry = add_labeled_entry(create_frame, "Alarm Days Before Due")
+assigned_to_entry = add_labeled_entry(create_frame, "Assign To (username)")
 
 def add_task():
     try:
@@ -163,23 +130,18 @@ def add_task():
                     alarm_days, assigned_to_entry.get()))
     conn.commit()
     messagebox.showinfo("Success", "Task created!")
-    title_entry.delete(0, tk.END)
-    description_entry.delete(0, tk.END)
-    due_date_entry.delete(0, tk.END)
-    alarm_days_entry.delete(0, tk.END)
-    assigned_to_entry.delete(0, tk.END)
+    for e in [title_entry, description_entry, due_date_entry, alarm_days_entry, assigned_to_entry]:
+        e.delete(0, tk.END)
 
-
-
-tk.Button(create_frame, text="Add Task", command=add_task).pack(pady=10)
+tk.Button(create_frame, text="Add Task", command=add_task, bg="#2196F3", fg="white").pack(pady=10)
 
 # ---------- READ TASK ----------
-read_frame = tk.Frame(root)
+read_frame = tk.Frame(root, bg="#f2f2f2")
 frames["read"] = read_frame
 
-tk.Label(read_frame, text="All Tasks", font=("Helvetica", 16)).pack(pady=10)
+tk.Label(read_frame, text="All Tasks", font=("Helvetica", 16), bg="#f2f2f2").pack(pady=10)
 task_listbox = tk.Listbox(read_frame, width=80)
-task_listbox.pack()
+task_listbox.pack(pady=5)
 
 def show_read():
     show_frame("read")
@@ -193,20 +155,14 @@ def show_read():
     for row in cursor.fetchall():
         task_listbox.insert(tk.END, f"ID {row[0]} | {row[1]} | {row[2]} | Due: {row[3]} | Assigned to: {row[6]} | Status: {row[5]}")
 
-
 # ---------- UPDATE TASK ----------
-update_frame = tk.Frame(root)
+update_frame = tk.Frame(root, bg="#f2f2f2")
 frames["update"] = update_frame
 
-tk.Label(update_frame, text="Update Task Status", font=("Helvetica", 16)).pack(pady=10)
+tk.Label(update_frame, text="Update Task Status", font=("Helvetica", 16), bg="#f2f2f2").pack(pady=10)
 
-update_id_entry = tk.Entry(update_frame)
-new_status_entry = tk.Entry(update_frame)
-
-tk.Label(update_frame, text="Task ID").pack()
-update_id_entry.pack()
-tk.Label(update_frame, text="New Status").pack()
-new_status_entry.pack()
+update_id_entry = add_labeled_entry(update_frame, "Task ID")
+new_status_entry = add_labeled_entry(update_frame, "New Status")
 
 def update_task():
     try:
@@ -224,17 +180,15 @@ def update_task():
         update_id_entry.delete(0, tk.END)
         new_status_entry.delete(0, tk.END)
 
-tk.Button(update_frame, text="Update", command=update_task).pack(pady=10)
+tk.Button(update_frame, text="Update", command=update_task, bg="#ff9800", fg="white").pack(pady=10)
 
 # ---------- DELETE TASK ----------
-delete_frame = tk.Frame(root)
+delete_frame = tk.Frame(root, bg="#f2f2f2")
 frames["delete"] = delete_frame
 
-tk.Label(delete_frame, text="Delete Task", font=("Helvetica", 16)).pack(pady=10)
+tk.Label(delete_frame, text="Delete Task", font=("Helvetica", 16), bg="#f2f2f2").pack(pady=10)
 
-delete_entry = tk.Entry(delete_frame)
-tk.Label(delete_frame, text="Task ID").pack()
-delete_entry.pack()
+delete_entry = add_labeled_entry(delete_frame, "Task ID")
 
 def delete_task():
     try:
@@ -251,22 +205,25 @@ def delete_task():
         messagebox.showinfo("Success", "Task deleted!")
         delete_entry.delete(0, tk.END)
 
-
 tk.Button(delete_frame, text="Delete Task", command=delete_task, bg="red", fg="white").pack(pady=10)
 
 # ---------- MAIN INTERFACE ----------
-
-
-menu_frame = tk.Frame(root)
+menu_frame = tk.Frame(root, bg="#ddd")
 menu_frame.pack(pady=10)
 
-tk.Button(menu_frame, text="Create Task", command=lambda: show_frame("create")).pack(side="left", padx=5)
-tk.Button(menu_frame, text="View Tasks", command=show_read).pack(side="left", padx=5)
-tk.Button(menu_frame, text="Update Task", command=lambda: show_frame("update")).pack(side="left", padx=5)
-tk.Button(menu_frame, text="Delete Task", command=lambda: show_frame("delete")).pack(side="left", padx=5)
-tk.Button(menu_frame, text="Logout", command=logout, bg="gray", fg="white").pack(side="left", padx=5)
+def render_menu():
+    for widget in menu_frame.winfo_children():
+        widget.destroy()
 
-# ---------- Start the App ----------
-root.withdraw()  # hide main window until login
+    if current_role == "assigner":
+        tk.Button(menu_frame, text="Create Task", command=lambda: show_frame("create")).pack(side="left", padx=5)
+    tk.Button(menu_frame, text="View Tasks", command=show_read).pack(side="left", padx=5)
+    tk.Button(menu_frame, text="Update Task", command=lambda: show_frame("update")).pack(side="left", padx=5)
+    if current_role == "assigner":
+        tk.Button(menu_frame, text="Delete Task", command=lambda: show_frame("delete")).pack(side="left", padx=5)
+    tk.Button(menu_frame, text="Logout", command=logout, bg="gray", fg="white").pack(side="left", padx=5)
+
+# ---------- Start App ----------
+root.withdraw()
 login_signup()
 root.mainloop()
