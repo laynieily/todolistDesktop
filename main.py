@@ -44,9 +44,12 @@ def show_frame(name):
 def login_signup():
     global login_window, username_entry, password_entry, role_entry
     login_window = tk.Toplevel()
-    login_window.title("Login / Sign Up")
-    login_window.geometry("300x280")
+    login_window.title("To Do List App")
+    login_window.geometry("400x350")
     login_window.configure(bg="#f9f9f9")
+
+    tk.Label(login_window, text="Login/Sign Up", font=("", 20)).pack(pady=20)
+
 
     tk.Label(login_window, text="Username").pack(pady=(10, 0))
     username_entry = tk.Entry(login_window, width=30)
@@ -217,13 +220,14 @@ def render_menu():
 
     if current_role == "assigner":
         tk.Button(menu_frame, text="Create Task", command=lambda: show_frame("create")).pack(side="left", padx=5)
-    tk.Button(menu_frame, text="View Tasks", command=show_read).pack(side="left", padx=5)
-    tk.Button(menu_frame, text="Update Task", command=lambda: show_frame("update")).pack(side="left", padx=5)
-    if current_role == "assigner":
+        tk.Button(menu_frame, text="View Tasks", command=show_read).pack(side="left", padx=5)
         tk.Button(menu_frame, text="Delete Task", command=lambda: show_frame("delete")).pack(side="left", padx=5)
+    if current_role == "assignee":
+        tk.Button(menu_frame, text="View Tasks", command=show_read).pack(side="left", padx=5)
+    tk.Button(menu_frame, text="Update Task", command=lambda: show_frame("update")).pack(side="left", padx=5)
     tk.Button(menu_frame, text="Logout", command=logout, bg="gray", fg="white").pack(side="left", padx=5)
 
-# ---------- Start App ----------
+# ---------- Start the App ----------
 root.withdraw()
 login_signup()
 root.mainloop()
