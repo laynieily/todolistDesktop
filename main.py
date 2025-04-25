@@ -30,8 +30,8 @@ conn.commit()
 # Tkinter windows
 root = tk.Tk()
 root.title("To Do List App")
-root.geometry("600x500")
-root.configure(bg="#f2f2f2")
+root.state('zoomed')
+root.configure(bg="#cce7ff")
 
 frames = {}
 
@@ -45,26 +45,33 @@ def login_signup():
     global login_window, username_entry, password_entry, role_entry
     login_window = tk.Toplevel()
     login_window.title("To Do List App")
-    login_window.geometry("400x350")
-    login_window.configure(bg="#f9f9f9")
+    login_window.state('zoomed')
+    login_window.configure(bg="#cce7ff")
 
-    tk.Label(login_window, text="Login/Sign Up", font=("", 20)).pack(pady=20)
+    # Container frame (centers everything)
+    center_frame = tk.Frame(login_window)
+    center_frame.place(relx=0.5, rely=0.5, anchor="center") # this centers the feilds
 
+    for i in range(4) :
+        center_frame.rowconfigure(1, weight=1)
+    center_frame.columnconfigure(1, weight=1)
+    
+    tk.Label(center_frame, text="Login/Sign Up",bg="#f9f9f9", font=("", 20)).grid(row=0, column= 0, sticky='w', padx=10,pady=5)
 
-    tk.Label(login_window, text="Username").pack(pady=(10, 0))
-    username_entry = tk.Entry(login_window, width=30)
-    username_entry.pack()
+    tk.Label(center_frame, text="Username", bg="#f9f9f9").grid(row=1, column=0, sticky='nsew', padx=10, pady=5)
+    username_entry = tk.Entry(center_frame, width=30)
+    username_entry.grid(row=1, column=1, sticky='nsew', padx=10, pady=5)
 
-    tk.Label(login_window, text="Password").pack(pady=(10, 0))
-    password_entry = tk.Entry(login_window, show="*", width=30)
-    password_entry.pack()
+    tk.Label(center_frame, text="Password", bg="#f9f9f9").grid(row=2, column=0, sticky = 'nsew', padx=10, pady=5)
+    password_entry = tk.Entry(center_frame, show="*", width=30)
+    password_entry.grid(row=2, column=1, sticky='nsew', padx=10, pady=5)
 
-    tk.Label(login_window, text="Role (assigner/assignee)").pack(pady=(10, 0))
-    role_entry = tk.Entry(login_window, width=30)
-    role_entry.pack()
+    tk.Label(center_frame, text="Role (assigner/assignee)", bg="#f9f9f9").grid(row=3, column=0, sticky = 'nsew', padx=10, pady=5)
+    role_entry = tk.Entry(center_frame, width=30)
+    role_entry.grid(row=3, column=1, sticky='nsew', padx=10, pady=5)
 
-    tk.Button(login_window, text="Login", command=login, bg="#4CAF50", fg="white").pack(pady=10)
-    tk.Button(login_window, text="Sign Up", command=signup).pack()
+    tk.Button(center_frame, text="Login", command=login, bg="#4CAF50", fg="white").grid(row=4, column=0, columnspan=2, pady=10)
+    tk.Button(center_frame, text="Sign Up", command=signup).grid(row=5, column=0, columnspan=2)
 
 def login():
     global current_user, current_role
