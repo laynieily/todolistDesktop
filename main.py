@@ -42,36 +42,45 @@ def show_frame(name):
 
 # ---------- LOGIN/SIGNUP ----------
 def login_signup():
-    global login_window, username_entry, password_entry, role_entry
+    global login_window, username_entry, password_entry, selected_role
     login_window = tk.Toplevel()
     login_window.title("To Do List App")
     login_window.state('zoomed')
     login_window.configure(bg="#cce7ff")
 
-    # Container frame (centers everything)
     center_frame = tk.Frame(login_window)
-    center_frame.place(relx=0.5, rely=0.5, anchor="center") # this centers the feilds
+    center_frame.place(relx=0.5, rely=0.5, anchor="center")
 
-    for i in range(4) :
+    for i in range(4):
         center_frame.rowconfigure(1, weight=1)
-    center_frame.columnconfigure(1, weight=1)
-    
-    tk.Label(center_frame, text="Login/Sign Up",bg="#f9f9f9", font=("", 20)).grid(row=0, column= 0, sticky='w', padx=10,pady=5)
+        center_frame.columnconfigure(1, weight=1)
 
-    tk.Label(center_frame, text="Username", bg="#f9f9f9").grid(row=1, column=0, sticky='nsew', padx=10, pady=5)
+    tk.Label(center_frame, text="Login/Sign Up", font=("", 20)).grid(row=0, column=0, sticky='w', padx=10, pady=5)
+
+    tk.Label(center_frame, text="Username").grid(row=1, column=0, sticky='nsew', padx=10, pady=5)
     username_entry = tk.Entry(center_frame, width=30)
     username_entry.grid(row=1, column=1, sticky='nsew', padx=10, pady=5)
 
-    tk.Label(center_frame, text="Password", bg="#f9f9f9").grid(row=2, column=0, sticky = 'nsew', padx=10, pady=5)
+    tk.Label(center_frame, text="Password").grid(row=2, column=0, sticky='nsew', padx=10, pady=5)
     password_entry = tk.Entry(center_frame, show="*", width=30)
     password_entry.grid(row=2, column=1, sticky='nsew', padx=10, pady=5)
 
-    tk.Label(center_frame, text="Role (assigner/assignee)", bg="#f9f9f9").grid(row=3, column=0, sticky = 'nsew', padx=10, pady=5)
-    role_entry = tk.Entry(center_frame, width=30)
-    role_entry.grid(row=3, column=1, sticky='nsew', padx=10, pady=5)
+    options = ["Assigner", "Assignee"]
+    selected_role = tk.StringVar()
+    selected_role.set("Select Role")
+
+    dropDown = tk.Menubutton(center_frame, textvariable=selected_role, relief=tk.GROOVE)
+    dropDown.menu = tk.Menu(dropDown, tearoff=0)
+    dropDown["menu"] = dropDown.menu
+
+    for option in options:
+        dropDown.menu.add_radiobutton(label=option, variable=selected_role, value=option)
+
+    dropDown.grid(row=3, column=1, sticky='nsew', padx=10, pady=5)
 
     tk.Button(center_frame, text="Login", command=login, bg="#4CAF50", fg="white").grid(row=4, column=0, columnspan=2, pady=10)
     tk.Button(center_frame, text="Sign Up", command=signup).grid(row=5, column=0, columnspan=2)
+
 
 def login():
     global current_user, current_role
@@ -85,6 +94,7 @@ def login():
         messagebox.showinfo("Success", f"Welcome {current_user}!")
         login_window.destroy()
         root.deiconify()
+        root.state('zoomed')
         render_menu()
         show_read()
     else:
@@ -93,7 +103,7 @@ def login():
 def signup():
     username = username_entry.get()
     password = password_entry.get()
-    role = role_entry.get().lower()
+    role = selected_role.get().lower()  
     if role not in ['assigner', 'assignee']:
         messagebox.showerror("Error", "Role must be 'assigner' or 'assignee'")
         return
@@ -105,13 +115,14 @@ def signup():
     except sqlite3.IntegrityError:
         messagebox.showerror("Error", "Username already exists!")
 
+
 # ----- Logout --------
 def logout():
     root.withdraw()
     login_signup()
 
 # ---------- CREATE TASK ----------
-create_frame = tk.Frame(root, bg="#f2f2f2")
+create_frame = tk.Frame(root, bg="#cce7ff")
 frames["create"] = create_frame
 
 tk.Label(create_frame, text="Create Task", font=("Helvetica", 16), bg="#f2f2f2").pack(pady=10)
@@ -146,7 +157,7 @@ def add_task():
 tk.Button(create_frame, text="Add Task", command=add_task, bg="#2196F3", fg="white").pack(pady=10)
 
 # ---------- READ TASK ----------
-read_frame = tk.Frame(root, bg="#f2f2f2")
+read_frame = tk.Frame(root, bg="#cce7ff")
 frames["read"] = read_frame
 
 tk.Label(read_frame, text="All Tasks", font=("Helvetica", 16), bg="#f2f2f2").pack(pady=10)
@@ -166,7 +177,7 @@ def show_read():
         task_listbox.insert(tk.END, f"ID {row[0]} | {row[1]} | {row[2]} | Due: {row[3]} | Assigned to: {row[6]} | Status: {row[5]}")
 
 # ---------- UPDATE TASK ----------
-update_frame = tk.Frame(root, bg="#f2f2f2")
+update_frame = tk.Frame(root, bg="#cce7ff")
 frames["update"] = update_frame
 
 tk.Label(update_frame, text="Update Task Status", font=("Helvetica", 16), bg="#f2f2f2").pack(pady=10)
