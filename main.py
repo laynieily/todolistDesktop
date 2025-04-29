@@ -55,13 +55,13 @@ def login_signup():
         center_frame.rowconfigure(1, weight=1)
         center_frame.columnconfigure(1, weight=1)
 
-    tk.Label(center_frame, text="Login/Sign Up", font=("", 20)).grid(row=0, column=0, sticky='w', padx=10, pady=5)
+    tk.Label(center_frame, text="Login/Sign Up", font=("", 20)).grid(row=0, column=1, sticky='n', padx=50, pady=5)
 
-    tk.Label(center_frame, text="Username").grid(row=1, column=0, sticky='nsew', padx=10, pady=5)
+    tk.Label(center_frame, text="Username").grid(row=1, column=0) #, sticky='nsew', padx=10, pady=5
     username_entry = tk.Entry(center_frame, width=30)
     username_entry.grid(row=1, column=1, sticky='nsew', padx=10, pady=5)
 
-    tk.Label(center_frame, text="Password").grid(row=2, column=0, sticky='nsew', padx=10, pady=5)
+    tk.Label(center_frame, text="Password").grid(row=2, column=0) #, sticky='nsew', padx=10, pady=5
     password_entry = tk.Entry(center_frame, show="*", width=30)
     password_entry.grid(row=2, column=1, sticky='nsew', padx=10, pady=5)
 
@@ -76,6 +76,7 @@ def login_signup():
     for option in options:
         dropDown.menu.add_radiobutton(label=option, variable=selected_role, value=option)
 
+    tk.Label(center_frame, text="Role").grid(row=3, column=0, sticky='nsew')
     dropDown.grid(row=3, column=1, sticky='nsew', padx=10, pady=5)
 
     tk.Button(center_frame, text="Login", command=login, bg="#4CAF50", fg="white").grid(row=4, column=0, columnspan=2, pady=10)
