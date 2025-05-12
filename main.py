@@ -148,7 +148,32 @@ alarm_days_entry  = add_labeled_entry(inner, "Alarm Days Before Due",  4)
 assigned_to_entry = add_labeled_entry(inner, "Assign To (username)",   5)
 
 # 4) add task button
-tk.Button(inner, text="Add Task", command=add_labeled_entry, bg="#2196F3", fg="white")\
+def add_task():
+    title = title_entry.get()
+    description = description_entry.get()
+    due_date = due_date_entry.get()
+    try:
+        alarm_days = int(alarm_days_entry.get())
+    except ValueError:
+        return messagebox.showerror("Error", "Alarm Days must be an integer.")
+    assigned_to = assigned_to_entry.get()
+
+    if not title or not due_date or not assigned_to:
+        return messagebox.showerror("Error", "Please fill in all required fields.")
+
+    cursor.execute("""
+        INSERT INTO tasks (title, description, due_date, alarm_days, assigned_to)
+        VALUES (?, ?, ?, ?, ?)
+    """, (title, description, due_date, alarm_days, assigned_to))
+    conn.commit()
+
+    messagebox.showinfo("Success", "Task added successfully!")
+
+    # Clear entries
+    for entry in [title_entry, description_entry, due_date_entry, alarm_days_entry, assigned_to_entry]:
+        entry.delete(0, tk.END)
+
+tk.Button(inner, text="Add Task", command=add_task, bg="#2196F3", fg="white")\
     .grid(row=6, column=0, columnspan=2, pady=(20,0))
 
 
