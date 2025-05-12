@@ -141,8 +141,8 @@ def add_labeled_entry(parent, text, row):
     ent.grid(row=row, column=1, padx=5, pady=5)
     return ent
 
-title_entry       = add_labeled_entry(inner, "Title",                   1)
-description_entry = add_labeled_entry(inner, "Description",             2)
+title_entry       = add_labeled_entry(inner, "Title",                  1)
+description_entry = add_labeled_entry(inner, "Description",            2)
 due_date_entry    = add_labeled_entry(inner, "Due Date (MM/DD/YYYY)",  3)
 alarm_days_entry  = add_labeled_entry(inner, "Alarm Days Before Due",  4)
 assigned_to_entry = add_labeled_entry(inner, "Assign To (username)",   5)
@@ -173,7 +173,7 @@ def show_read():
         cursor.execute("SELECT * FROM tasks")
     for row in cursor.fetchall():
         task_listbox.insert(tk.END,
-            f"ID {row[0]} | {row[1]} | Due: {row[3]} | Assigned: {row[6]} | Status: {row[5]}"
+            f"🆔 {row[0]} | 🧾 {row[1]} | 📅 Due: {row[3]} | 👤 Assigned: {row[6]} | 📌 Status: {row[5]}"
         )
     show_frame("read")
 
@@ -246,20 +246,20 @@ def render_menu():
 
 
     if current_role == "assigner":
-        tk.Button(menu_frame, text="Create Task", command=lambda: show_frame("create"))\
+        tk.Button(menu_frame, text="Create Task", command=lambda: show_frame("create"), bg = "blue", fg="white")\
             .pack(side="left", padx=5)
-        tk.Button(menu_frame, text="View Tasks",  command=show_read)\
+        tk.Button(menu_frame, text="View Tasks",  command=show_read, bg = "green", fg="white")\
             .pack(side="left", padx=5)
-        tk.Button(menu_frame, text="Delete Task", command=lambda: show_frame("delete"))\
+        tk.Button(menu_frame, text="Delete Task", command=lambda: show_frame("delete"), bg ="red", fg="white")\
             .pack(side="left", padx=5)
 
     if current_role == "assignee":
         tk.Button(menu_frame, text="View Tasks", command=show_read)\
             .pack(side="left", padx=5)
 
-    tk.Button(menu_frame, text="Update Task", command=lambda: show_frame("update"))\
+    tk.Button(menu_frame, text="Update Task", command=lambda: show_frame("update"), bg="orange", fg="white")\
         .pack(side="left", padx=5)
-    tk.Button(menu_frame, text="Logout",      command=logout, bg="gray", fg="white")\
+    tk.Button(menu_frame, text="Logout", command=logout, bg="gray", fg="white")\
         .pack(side="left", padx=5)
 
 # ——— Start the app ———
