@@ -134,7 +134,6 @@ inner.place(relx=0.5, rely=0.5, anchor="center")
 tk.Label(inner, text="Create Task", font=("Helvetica",16), bg="#cce7ff")\
     .grid(row=0, column=0, columnspan=2, pady=(0,20))
 
-# 3) add_labeled_entry now targets `inner`
 def add_labeled_entry(parent, text, row):
     tk.Label(parent, text=text, bg="#cce7ff")\
         .grid(row=row, column=0, sticky="e", padx=5, pady=5)
@@ -148,7 +147,7 @@ due_date_entry    = add_labeled_entry(inner, "Due Date (MM/DD/YYYY)",  3)
 alarm_days_entry  = add_labeled_entry(inner, "Alarm Days Before Due",  4)
 assigned_to_entry = add_labeled_entry(inner, "Assign To (username)",   5)
 
-# 4) Single “Add Task” button in inner
+# 4) add task button
 tk.Button(inner, text="Add Task", command=add_labeled_entry, bg="#2196F3", fg="white")\
     .grid(row=6, column=0, columnspan=2, pady=(20,0))
 
@@ -157,10 +156,13 @@ tk.Button(inner, text="Add Task", command=add_labeled_entry, bg="#2196F3", fg="w
 read_frame = tk.Frame(root, bg="#cce7ff")
 frames["read"] = read_frame
 
+inner = tk.Frame(read_frame, bg="#cce7ff")
+inner.place(relx=0.5, rely=0.5, anchor="center")
+
 # Pack header and listbox inside read_frame
-tk.Label(read_frame, text="All Tasks", font=("Helvetica",16), bg="#cce7ff")\
+tk.Label(inner, text="All Tasks", font=("Helvetica",16), bg="#cce7ff")\
     .pack(pady=10)
-task_listbox = tk.Listbox(read_frame, width=80)
+task_listbox = tk.Listbox(inner, width=80)
 task_listbox.pack(pady=5)
 
 def show_read():
@@ -180,11 +182,14 @@ def show_read():
 update_frame = tk.Frame(root, bg="#cce7ff")
 frames["update"] = update_frame
 
-tk.Label(update_frame, text="Update Task Status", font=("Helvetica",16), bg="#cce7ff")\
+inner = tk.Frame(update_frame, bg="#cce7ff")
+inner.place(relx=0.5, rely=0.5, anchor="center")
+
+tk.Label(inner, text="Update Task Status", font=("Helvetica",16), bg="#cce7ff")\
     .grid(row=0, column=0, columnspan=2, pady=10)
 
-update_id_entry  = add_labeled_entry(update_frame, "Task ID",   1)
-new_status_entry = add_labeled_entry(update_frame, "New Status",2)
+update_id_entry  = add_labeled_entry(inner, "Task ID",   1)
+new_status_entry = add_labeled_entry(inner, "New Status",2)
 
 def update_task():
     try:
@@ -199,7 +204,7 @@ def update_task():
     update_id_entry.delete(0,tk.END)
     new_status_entry.delete(0,tk.END)
 
-tk.Button(update_frame, text="Update", command=update_task, bg="#ff9800", fg="white")\
+tk.Button(inner, text="Update", command=update_task, bg="#ff9800", fg="white")\
     .grid(row=3, column=0, columnspan=2, pady=10)
 
 # ——— DELETE TASK FRAME ———
@@ -207,10 +212,13 @@ delete_frame = tk.Frame(root, bg="#cce7ff")
 delete_frame.place(relx=0.5, rely=0.5, anchor="center")
 frames["delete"] = delete_frame
 
-tk.Label(delete_frame, text="Delete Task", font=("Helvetica",16), bg="#cce7ff")\
-    .grid(row=0, column=0, columnspan=2, pady=10)
+inner = tk.Frame(delete_frame, bg="#cce7ff")
+inner.place(relx=0.5, rely=0.5, anchor="center")
 
-delete_entry = add_labeled_entry(delete_frame, "Task ID", 1)
+tk.Label(inner, text="Delete Task", font=("Helvetica",16), bg="#cce7ff")\
+    .grid(row=0, column=0, columnspan=2, pady=(0,20))
+
+delete_entry = add_labeled_entry(inner, "Task ID", 1)
 
 def delete_task():
     try:
@@ -224,7 +232,7 @@ def delete_task():
     messagebox.showinfo("Success","Task deleted")
     delete_entry.delete(0,tk.END)
 
-tk.Button(delete_frame, text="Delete Task", command=delete_task, bg="red", fg="white")\
+tk.Button(inner, text="Delete Task", command=delete_task, bg="red", fg="white")\
     .grid(row=2, column=0, columnspan=2, pady=10)
 
 # ——— MAIN MENU ———
