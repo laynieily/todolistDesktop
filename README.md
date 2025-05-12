@@ -26,3 +26,9 @@ This project will follow the Agile methodology and the development process will 
 2. Run `npm install` to install.
 3. Start the application with `npm start`.
 
+## Contributers
+Laynie Avila
+Norma Escalante
+Juan C De Leon
+Jose Espinoza
+
